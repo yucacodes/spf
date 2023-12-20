@@ -3,6 +3,7 @@ package transfers
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net"
 )
 
@@ -44,6 +45,8 @@ func Receive(conn net.Conn, v any) error {
 	}
 	err := json.Unmarshal(mainBuf, v)
 	if err != nil {
+		fmt.Println("Error parsing readed message")
+		fmt.Print(err)
 		return err
 	}
 	return nil
