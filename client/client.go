@@ -4,22 +4,28 @@ import (
 	"fmt"
 	"net"
 
+	"github.com/yucacodes/secure-port-forwarding/server"
 	"github.com/yucacodes/secure-port-forwarding/stream"
 	"github.com/yucacodes/secure-port-forwarding/transfers"
 )
 
 func Main() {
 	fmt.Println("Client")
-	// Connect to the server
-	server, err := net.Dial("tcp", "localhost:8080")
+	// Connect to the serverListener
+	serverListener, err := net.Dial("tcp", "localhost:5000")
 	if err != nil {
 		fmt.Println("Error:", err)
 		return
 	}
-	defer server.Close()
+	defer serverListener.Close()
 
 	for {
-		err = transfers.Write(server, 0)
+		appRequest := server.AppRequest{
+			Key:              "alsdknaslkdnasodnalsdknasdoasdasdasdasdlkamdsasd",
+			SetAppConnection: true,
+		}
+
+		err = transfers.Write(serverListener, appRequest)
 		if err != nil {
 			fmt.Println("Sending start code Error")
 			continue
@@ -30,24 +36,25 @@ func Main() {
 	fmt.Println("Star code 0 sent")
 
 	for {
-		var code int
-		err := transfers.Read(server, &code)
+		connectClientRequest := server.ConnectClientRequest{}
+		err := transfers.Read(serverListener, &connectClientRequest)
 		if err != nil {
 			// fmt.Println("Error waiting for sub client code")
 			continue
 		}
-		go handleCallback(server, code)
+		go handleCallback(serverListener, connectClientRequest.ClientId)
 	}
 }
 
-func handleCallback(server net.Conn, startCode int) {
-	callback, err := net.Dial("tcp", "localhost:8080")
+func handleCallback(server net.Conn, appClientId string) {
+	callback, err := net.Dial("tcp", "localhost:5000")
 	if err != nil {
 		fmt.Println("Error connecting callback:", err)
 		return
 	}
-	fmt.Println("Sending callback code", startCode)
-	err = transfers.Write(callback, startCode)
+	fmt.Println("Sending callback code", appClientId)
+
+	err = transfers.Write(callback, appClientId)
 	if err != nil {
 		fmt.Println("Error transfering callback code")
 		fmt.Println(err)

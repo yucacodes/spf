@@ -3,24 +3,25 @@ package server
 import (
 	"fmt"
 	"net"
+	"strconv"
 
 	"github.com/google/uuid"
 	"github.com/yucacodes/secure-port-forwarding/transfers"
 )
 
 type ConnectClientRequest struct {
-	clientId string
+	ClientId string
 }
 
 func listenAppClients(connApp *ConnectedApp) {
 	defer connApp.Conn.Close()
-	clientsListener, err := net.Listen("tcp", "0.0.0.0:"+string(connApp.Config.Port))
+	clientsListener, err := net.Listen("tcp", "0.0.0.0:"+strconv.Itoa(connApp.Config.Port))
 	if err != nil {
 		fmt.Println("Error:", err)
 		return
 	}
 	defer clientsListener.Close()
-	fmt.Println("App is listening on port " + string(connApp.Config.Port))
+	fmt.Println("App is listening on port " + strconv.Itoa(connApp.Config.Port))
 
 	for {
 		appClientConn, err := clientsListener.Accept()
@@ -31,7 +32,7 @@ func listenAppClients(connApp *ConnectedApp) {
 
 		fmt.Println("Sub Client connected", appClientConn)
 		appClientId := uuid.New()
-		req := ConnectClientRequest{clientId: appClientId.String()}
+		req := ConnectClientRequest{ClientId: appClientId.String()}
 
 		err = transfers.Write(connApp.Conn, req)
 		if err != nil {
