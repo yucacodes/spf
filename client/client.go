@@ -19,7 +19,7 @@ func Main() {
 	defer server.Close()
 
 	for {
-		err = transfers.Send(server, 0)
+		err = transfers.Write(server, 0)
 		if err != nil {
 			fmt.Println("Sending start code Error")
 			continue
@@ -31,7 +31,7 @@ func Main() {
 
 	for {
 		var code int
-		err := transfers.Receive(server, &code)
+		err := transfers.Read(server, &code)
 		if err != nil {
 			// fmt.Println("Error waiting for sub client code")
 			continue
@@ -47,7 +47,7 @@ func handleCallback(server net.Conn, startCode int) {
 		return
 	}
 	fmt.Println("Sending callback code", startCode)
-	err = transfers.Send(callback, startCode)
+	err = transfers.Write(callback, startCode)
 	if err != nil {
 		fmt.Println("Error transfering callback code")
 		fmt.Println(err)
