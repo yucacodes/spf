@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net"
 
+	transfers "github.com/yucacodes/secure-port-forwarding/messages"
 	"github.com/yucacodes/secure-port-forwarding/stream"
-	"github.com/yucacodes/secure-port-forwarding/transfers"
 )
 
 type AppRequest struct {
@@ -66,7 +66,7 @@ func handleAppConnection(conn net.Conn, allowedApps []AppConfig, appsPool map[st
 
 func ValidateAppConnectionRequest(conn net.Conn, allowedApps []AppConfig) (*AppConfig, *AppRequest, error) {
 	req := AppRequest{}
-	err := transfers.Read(conn, &req)
+	err := transfers.Receive(conn, &req)
 	if err != nil {
 		return nil, nil, err
 	}

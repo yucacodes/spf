@@ -3,8 +3,10 @@ package main
 import (
 	"os"
 
-	"github.com/yucacodes/secure-port-forwarding/client"
-	"github.com/yucacodes/secure-port-forwarding/server"
+	// "github.com/yucacodes/secure-port-forwarding/client"
+	// "github.com/yucacodes/secure-port-forwarding/server"
+	"github.com/yucacodes/secure-port-forwarding/testclient"
+	"github.com/yucacodes/secure-port-forwarding/testserver"
 )
 
 func main() {
@@ -15,9 +17,14 @@ func main() {
 	}
 
 	module := args[0]
+	// if module == "server" {
+	// 	server.Main()
+	// } else if module == "client" {
+	// 	client.Main()
+	// }
 	if module == "server" {
-		server.Main()
+		testserver.Main()
 	} else if module == "client" {
-		client.Main()
+		testclient.Main()
 	}
 }

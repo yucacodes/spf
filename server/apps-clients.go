@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"github.com/google/uuid"
-	"github.com/yucacodes/secure-port-forwarding/transfers"
+	transfers "github.com/yucacodes/secure-port-forwarding/messages"
 )
 
 type ConnectClientRequest struct {
@@ -34,7 +34,7 @@ func listenAppClients(connApp *ConnectedApp) {
 		appClientId := uuid.New()
 		req := ConnectClientRequest{ClientId: appClientId.String()}
 
-		err = transfers.Write(connApp.Conn, req)
+		err = transfers.Send(connApp.Conn, req)
 		if err != nil {
 			fmt.Println("Error on request connection to App")
 		}

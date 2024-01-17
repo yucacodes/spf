@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"net"
 
+	transfers "github.com/yucacodes/secure-port-forwarding/messages"
 	"github.com/yucacodes/secure-port-forwarding/server"
 	"github.com/yucacodes/secure-port-forwarding/stream"
-	"github.com/yucacodes/secure-port-forwarding/transfers"
 )
 
 func Main() {
@@ -25,7 +25,7 @@ func Main() {
 			SetAppConnection: true,
 		}
 
-		err = transfers.Write(serverListener, appRequest)
+		err = transfers.Send(serverListener, appRequest)
 		if err != nil {
 			fmt.Println("Sending start code Error")
 			continue
@@ -37,7 +37,7 @@ func Main() {
 
 	for {
 		connectClientRequest := server.ConnectClientRequest{}
-		err := transfers.Read(serverListener, &connectClientRequest)
+		err := transfers.Receive(serverListener, &connectClientRequest)
 		if err != nil {
 			// fmt.Println("Error waiting for sub client code")
 			continue
@@ -54,7 +54,7 @@ func handleCallback(server net.Conn, appClientId string) {
 	}
 	fmt.Println("Sending callback code", appClientId)
 
-	err = transfers.Write(callback, appClientId)
+	err = transfers.Send(callback, appClientId)
 	if err != nil {
 		fmt.Println("Error transfering callback code")
 		fmt.Println(err)

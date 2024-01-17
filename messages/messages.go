@@ -9,7 +9,7 @@ import (
 
 var transferEnd = byte(0x0a)
 
-func Write(conn net.Conn, v any) error {
+func Send(conn net.Conn, v any) error {
 	out, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -25,7 +25,7 @@ func Write(conn net.Conn, v any) error {
 	return nil
 }
 
-func Read(conn net.Conn, v any) error {
+func Receive(conn net.Conn, v any) error {
 	mainBuf := make([]byte, 0, 1000)
 	charBuf := make([]byte, 1)
 
