@@ -1,4 +1,4 @@
-package sockets
+package socket
 
 import (
 	"errors"
@@ -17,7 +17,7 @@ func NewESocket(conn net.Conn) *ESocket {
 	return &es
 }
 
-func (es *ESocket) SendWithStop(buff []byte, stopByte byte) error {
+func (es *ESocket) Send(buff []byte, stopByte byte) error {
 	if es.IsClosed() {
 		return errors.New("EOF")
 	}
@@ -33,7 +33,7 @@ func (es *ESocket) SendWithStop(buff []byte, stopByte byte) error {
 	return nil
 }
 
-func (es *ESocket) ReceiveUntilStop(stopByte byte, buff []byte) ([]byte, error) {
+func (es *ESocket) Receive(buff []byte, stopByte byte) ([]byte, error) {
 	if es.IsClosed() {
 		return nil, errors.New("EOF")
 	}

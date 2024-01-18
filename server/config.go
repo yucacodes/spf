@@ -9,11 +9,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type AppConfig struct {
-	Port int    `yaml:"port" json:"port"`
-	Key  string `yaml:"key" json:"key"`
-}
-
 type ServerConfig struct {
 	Port int         `yaml:"port" json:"port"`
 	Apps []AppConfig `yaml:"apps" json:"apps"`

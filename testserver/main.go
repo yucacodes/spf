@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/yucacodes/secure-port-forwarding/sockets"
+	"github.com/yucacodes/secure-port-forwarding/socket"
 )
 
 func Main() {
@@ -29,11 +29,11 @@ func Main() {
 }
 
 func handleConnection(conn net.Conn) {
-	eSocket := sockets.NewESocket(conn)
+	eSocket := socket.NewESocket(conn)
 	defer eSocket.Close()
 
 	for eSocket.IsOpen() {
-		read, err := eSocket.ReceiveUntilStop(0, []byte{})
+		read, err := eSocket.Receive(0, []byte{})
 		if err == nil {
 			fmt.Println(read)
 		}

@@ -1,4 +1,4 @@
-package sockets
+package socket
 
 import (
 	"encoding/json"
@@ -24,7 +24,7 @@ func (js *JsonSocket) Send(v any) error {
 	if err != nil {
 		return err
 	}
-	err = js.esocket.SendWithStop(out, transferEnd)
+	err = js.esocket.Send(out, transferEnd)
 	if err != nil {
 		return err
 	}
@@ -33,7 +33,7 @@ func (js *JsonSocket) Send(v any) error {
 
 func (js *JsonSocket) Receive(v any) error {
 	buff := make([]byte, 0, 1000)
-	buff, err := js.esocket.ReceiveUntilStop(transferEnd, buff)
+	buff, err := js.esocket.Receive(buff, transferEnd)
 	if err != nil {
 		return err
 	}
