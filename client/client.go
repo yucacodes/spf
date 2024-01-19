@@ -3,46 +3,45 @@ package client
 import (
 	"fmt"
 	"net"
+	"strconv"
 
-	transfers "github.com/yucacodes/secure-port-forwarding/messages"
+	"github.com/yucacodes/secure-port-forwarding/app"
 	"github.com/yucacodes/secure-port-forwarding/server"
+	"github.com/yucacodes/secure-port-forwarding/socket"
 	"github.com/yucacodes/secure-port-forwarding/stream"
 )
 
-func Main() {
-	fmt.Println("Client")
-	// Connect to the serverListener
-	serverListener, err := net.Dial("tcp", "localhost:5000")
+type Client struct {
+	host   string
+	port   int
+	appKey string
+	server *socket.JsonSocket
+}
+
+func (c *Client) Start() {
+	conn, err := net.Dial("tcp", c.host+":"+strconv.Itoa(c.port))
 	if err != nil {
-		fmt.Println("Error:", err)
 		return
 	}
-	defer serverListener.Close()
+	c.server = socket.NewJsonSocket(conn)
+	defer c.server.Close()
 
-	for {
-		appRequest := server.AppRequest{
-			Key:              "alsdknaslkdnasodnalsdknasdoasdasdasdasdlkamdsasd",
-			SetAppConnection: true,
-		}
-
-		err = transfers.Send(serverListener, appRequest)
-		if err != nil {
-			fmt.Println("Sending start code Error")
-			continue
-		}
-		break
+	req := server.AppRequest{
+		AppKey:  c.appKey,
+		InitApp: true,
+	}
+	err = c.server.Send(req)
+	if err != nil {
+		return
 	}
 
-	fmt.Println("Star code 0 sent")
-
-	for {
-		connectClientRequest := server.ConnectClientRequest{}
-		err := transfers.Receive(serverListener, &connectClientRequest)
+	for c.server.IsOpen() {
+		req := app.AppClientPairRequestDto{}
+		err := c.server.Receive(req)
 		if err != nil {
-			// fmt.Println("Error waiting for sub client code")
 			continue
 		}
-		go handleCallback(serverListener, connectClientRequest.ClientId)
+
 	}
 }
 
