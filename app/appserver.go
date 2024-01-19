@@ -13,12 +13,15 @@ type AppServer struct {
 	port    int
 }
 
-func NewAppServer(port int) *AppServer {
-	o := AppServer{port: port}
+func NewAppServer(port int, backend *socket.JsonSocket) *AppServer {
+	o := AppServer{port: port, backend: backend}
 	return &o
 }
 
 func (as *AppServer) Listen() error {
+
+	defer as.Close()
+
 	server, err := net.Listen("tcp", "0.0.0.0:"+strconv.Itoa(as.port))
 	if err != nil {
 		return err
@@ -60,4 +63,12 @@ func (as *AppServer) RequestAppClientBackend(client *AppClient) error {
 		return err
 	}
 	return nil
+}
+
+func (as *AppServer) Close() {
+	as.backend.Close()
+	for clientId, client := range as.clients {
+		client.Close()
+		delete(as.clients, clientId)
+	}
 }

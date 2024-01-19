@@ -51,3 +51,11 @@ func (js *JsonSocket) IsOpen() bool {
 func (js *JsonSocket) IsClosed() bool {
 	return js.esocket.IsClosed()
 }
+
+func (js *JsonSocket) Close() {
+	js.esocket.Close()
+}
+
+func (js *JsonSocket) Conn() net.Conn {
+	return js.esocket.conn
+}

@@ -32,3 +32,8 @@ func (ap *AppClient) Streaming() {
 	// TODO: Implement this
 	panic("Implement this")
 }
+
+func (ap *AppClient) Close() {
+	// TODO: Implement this
+	panic("Implement this")
+}

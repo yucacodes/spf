@@ -10,8 +10,8 @@ import (
 )
 
 type ServerConfig struct {
-	Port int         `yaml:"port" json:"port"`
-	Apps []AppConfig `yaml:"apps" json:"apps"`
+	Port int          `yaml:"port" json:"port"`
+	Apps []*AppConfig `yaml:"apps" json:"apps"`
 }
 
 func ServerConfigFromFile(path string) (*ServerConfig, error) {
@@ -27,7 +27,7 @@ func ServerConfigFromFile(path string) (*ServerConfig, error) {
 	} else if strings.HasSuffix(path, "json") {
 		err = json.Unmarshal(file, &config)
 	} else {
-		return nil, errors.New("config file not supported")
+		return nil, errors.New("config file format not supported")
 	}
 	if err != nil {
 		return nil, err

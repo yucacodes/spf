@@ -67,3 +67,7 @@ func (es *ESocket) Close() {
 	es.conn.Close()
 	es.closed = true
 }
+
+func (es *ESocket) Conn() net.Conn {
+	return es.conn
+}

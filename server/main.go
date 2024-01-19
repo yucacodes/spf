@@ -2,8 +2,6 @@ package server
 
 import (
 	"fmt"
-	"net"
-	"strconv"
 
 	"github.com/jessevdk/go-flags"
 )
@@ -21,19 +19,9 @@ func Main() {
 	config, err := ServerConfigFromFile(ServerOptions.ConfigFile)
 	if err != nil {
 		fmt.Println(err)
-	}
-	runServer(*config)
-}
-
-func runServer(config ServerConfig) {
-	appsListener, err := net.Listen("tcp", "0.0.0.0:"+strconv.Itoa(config.Port))
-
-	if err != nil {
-		fmt.Println("Error:", err)
 		return
 	}
-	defer appsListener.Close()
-
-	fmt.Println("Server is listening on port " + strconv.Itoa(config.Port))
-	listenApps(config.Apps, appsListener)
+	server := NewServer(config.Port, config.Apps)
+	defer server.Close()
+	server.Listen()
 }
