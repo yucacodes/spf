@@ -1,25 +1,42 @@
 package client
 
 import (
-	"fmt"
 	"net"
 	"strconv"
 
 	"github.com/yucacodes/secure-port-forwarding/app"
 	"github.com/yucacodes/secure-port-forwarding/server"
 	"github.com/yucacodes/secure-port-forwarding/socket"
-	"github.com/yucacodes/secure-port-forwarding/stream"
 )
 
 type Client struct {
-	host   string
-	port   int
-	appKey string
-	server *socket.JsonSocket
+	serverHost string
+	serverPort int
+	appKey     string
+	appHost    string
+	appPort    int
+	server     *socket.JsonSocket
 }
 
-func (c *Client) Start() {
-	conn, err := net.Dial("tcp", c.host+":"+strconv.Itoa(c.port))
+func NewClient(
+	serverHost string,
+	serverPort int,
+	appKey string,
+	appHost string,
+	appPort int,
+) *Client {
+	c := Client{
+		serverHost: serverHost,
+		serverPort: serverPort,
+		appKey:     appKey,
+		appHost:    appHost,
+		appPort:    appPort,
+	}
+	return &c
+}
+
+func (c *Client) Connect() {
+	conn, err := net.Dial("tcp", c.serverHost+":"+strconv.Itoa(c.serverPort))
 	if err != nil {
 		return
 	}
@@ -42,27 +59,40 @@ func (c *Client) Start() {
 			continue
 		}
 
+		go c.createBackendConnection(&req)
 	}
 }
 
-func handleCallback(server net.Conn, appClientId string) {
-	callback, err := net.Dial("tcp", "localhost:5000")
-	if err != nil {
-		fmt.Println("Error connecting callback:", err)
-		return
-	}
-	fmt.Println("Sending callback code", appClientId)
+func (c *Client) createBackendConnection(req *app.AppClientPairRequestDto) {
 
-	err = transfers.Send(callback, appClientId)
+	backConn, err := net.Dial("tcp", c.appHost+":"+strconv.Itoa(c.appPort))
 	if err != nil {
-		fmt.Println("Error transfering callback code")
-		fmt.Println(err)
 		return
 	}
-	backend, err := net.Dial("tcp", "localhost:5173")
+	defer backConn.Close()
+
+	serverConn, err := net.Dial("tcp", c.serverHost+":"+strconv.Itoa(c.serverPort))
 	if err != nil {
-		fmt.Println("Error connecting backend:", err)
 		return
 	}
-	stream.HandlePairStream(backend, callback)
+	sjSocket := socket.NewJsonSocket(serverConn)
+	defer sjSocket.Close()
+
+	serverReq := server.AppRequest{
+		AppKey:             c.appKey,
+		BackendToAppClient: true,
+		AppClientId:        req.ClientId,
+	}
+	err = sjSocket.Send(serverReq)
+	if err != nil {
+		return
+	}
+
+	appClient := app.NewAppClient(serverConn)
+	appClient.SetBackendConnection(backConn)
+	appClient.Streaming()
+}
+
+func (c *Client) Close() {
+	// TODO
 }
