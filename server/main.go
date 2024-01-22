@@ -1,7 +1,8 @@
 package server
 
 import (
-	"fmt"
+	"log"
+	"os"
 
 	"github.com/jessevdk/go-flags"
 )
@@ -11,6 +12,9 @@ var ServerOptions struct {
 }
 
 func Main() {
+
+	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
+
 	_, err := flags.Parse(&ServerOptions)
 	if err != nil {
 		return
@@ -18,7 +22,7 @@ func Main() {
 
 	config, err := ServerConfigFromFile(ServerOptions.ConfigFile)
 	if err != nil {
-		fmt.Println(err)
+		logger.Fatalln(err)
 		return
 	}
 	server := NewServer(config.Port, config.Apps)
