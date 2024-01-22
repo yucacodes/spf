@@ -12,9 +12,7 @@ var ServerOptions struct {
 }
 
 func Main() {
-
 	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
-
 	_, err := flags.Parse(&ServerOptions)
 	if err != nil {
 		return

@@ -12,7 +12,8 @@ type ESocket struct {
 
 func NewESocket(conn net.Conn) *ESocket {
 	es := ESocket{
-		conn: conn,
+		conn:   conn,
+		closed: false,
 	}
 	return &es
 }

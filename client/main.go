@@ -1,7 +1,8 @@
 package client
 
 import (
-	"fmt"
+	"log"
+	"os"
 
 	"github.com/jessevdk/go-flags"
 )
@@ -11,6 +12,7 @@ var ClientOptions struct {
 }
 
 func Main() {
+	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
 	_, err := flags.Parse(&ClientOptions)
 	if err != nil {
 		return
@@ -18,7 +20,7 @@ func Main() {
 
 	config, err := ClientConfigFromFile(ClientOptions.ConfigFile)
 	if err != nil {
-		fmt.Println(err)
+		logger.Fatalln(err)
 		return
 	}
 	client := NewClient(config.ServerHost, config.ServerPort, config.AppKey, config.AppHost, config.AppPort)

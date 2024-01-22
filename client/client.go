@@ -1,7 +1,9 @@
 package client
 
 import (
+	"log"
 	"net"
+	"os"
 	"strconv"
 
 	"github.com/yucacodes/secure-port-forwarding/app"
@@ -16,6 +18,7 @@ type Client struct {
 	appHost    string
 	appPort    int
 	server     *socket.JsonSocket
+	logger     *log.Logger
 }
 
 func NewClient(
@@ -31,6 +34,7 @@ func NewClient(
 		appKey:     appKey,
 		appHost:    appHost,
 		appPort:    appPort,
+		logger:     log.New(os.Stdout, "Client: ", log.Ldate|log.Ltime),
 	}
 	return &c
 }
@@ -49,6 +53,7 @@ func (c *Client) Connect() {
 	}
 	err = c.server.Send(req)
 	if err != nil {
+		c.logger.Fatalln(err)
 		return
 	}
 
