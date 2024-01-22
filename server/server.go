@@ -27,6 +27,7 @@ func NewServer(port int, appsConfigs []*AppConfig) *Server {
 	s := Server{
 		port:        port,
 		appsConfigs: make(map[string]*AppConfig),
+		appsServers: make(map[string]*app.AppServer),
 		logger:      log.New(os.Stdout, "Server: ", log.Ldate|log.Ltime),
 	}
 
@@ -76,7 +77,7 @@ type AppRequest struct {
 
 func (s *Server) GetAppRequest(jSocket *socket.JsonSocket) (*AppRequest, error) {
 	req := AppRequest{}
-	err := jSocket.Receive(req)
+	err := jSocket.Receive(&req)
 	if err != nil {
 		return nil, err
 	}
