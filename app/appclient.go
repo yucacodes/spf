@@ -1,21 +1,27 @@
 package app
 
 import (
+	"log"
 	"net"
+	"os"
+	"sync"
 
 	"github.com/google/uuid"
+	"github.com/yucacodes/secure-port-forwarding/socket"
 )
 
 type AppClient struct {
 	id         string
 	clientConn net.Conn
 	backConn   net.Conn
+	logger     *log.Logger
 }
 
 func NewAppClient(clientConn net.Conn) *AppClient {
 	o := AppClient{
 		id:         uuid.New().String(),
 		clientConn: clientConn,
+		logger:     log.New(os.Stdout, "AppClient: ", log.Ldate|log.Ltime),
 	}
 	return &o
 }
@@ -29,6 +35,24 @@ func (ap *AppClient) SetBackendConnection(backConn net.Conn) {
 }
 
 func (ap *AppClient) Streaming() {
-	// TODO: Implement this
-	panic("Implement this")
+	ap.logger.Println("Starting streaming...")
+	cSocket := socket.NewESocket(ap.clientConn)
+	bSocket := socket.NewESocket(ap.backConn)
+
+	var wg sync.WaitGroup
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		cSocket.StreamingTo(bSocket)
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		bSocket.StreamingTo(cSocket)
+	}()
+
+	wg.Wait()
+	ap.logger.Println("Streaming Finished")
 }

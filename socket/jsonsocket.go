@@ -24,7 +24,7 @@ func (js *JsonSocket) Send(v any) error {
 	if err != nil {
 		return err
 	}
-	err = js.esocket.Send(out, transferEnd)
+	err = js.esocket.SendWithStop(out, transferEnd)
 	if err != nil {
 		return err
 	}
@@ -33,7 +33,7 @@ func (js *JsonSocket) Send(v any) error {
 
 func (js *JsonSocket) Receive(v any) error {
 	buff := make([]byte, 0, 1000)
-	buff, err := js.esocket.Receive(buff, transferEnd)
+	buff, err := js.esocket.ReceiveUntilStop(buff, transferEnd)
 	if err != nil {
 		return err
 	}
@@ -54,4 +54,8 @@ func (js *JsonSocket) IsClosed() bool {
 
 func (js *JsonSocket) Conn() net.Conn {
 	return js.esocket.conn
+}
+
+func (js *JsonSocket) WaitForClose() {
+	js.esocket.WaitForClose()
 }

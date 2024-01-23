@@ -37,10 +37,14 @@ func (as *AppServer) Listen() {
 	as.logger.Println("Listening on port " + strconv.Itoa(as.port))
 	defer server.Close()
 
+	go func() {
+		as.backend.WaitForClose()
+		server.Close()
+	}()
+
 	for {
 		conn, err := server.Accept()
 		if err != nil {
-			as.logger.Println(err)
 			break
 		}
 		as.logger.Println("New connection")
@@ -48,11 +52,14 @@ func (as *AppServer) Listen() {
 		as.clients[client.Id()] = client
 		go as.RequestAppClientBackend(client)
 	}
+
+	as.logger.Println("Releasing port " + strconv.Itoa(as.port))
 }
 
 func (as *AppServer) HandleAppClientBackend(clientId string, conn net.Conn) {
 	client, exist := as.clients[clientId]
 	if !exist {
+		as.logger.Println("Not found requested app client")
 		return
 	}
 	client.SetBackendConnection(conn)

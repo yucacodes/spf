@@ -1,7 +1,6 @@
 package server
 
 import (
-	"errors"
 	"log"
 	"net"
 	"os"
@@ -113,12 +112,12 @@ func (s *Server) StartApp(conn net.Conn, appKey string) {
 	newAppServer.Listen()
 }
 
-func (s *Server) RegisterAppClientBackend(conn net.Conn, appKey string, appClientId string) error {
+func (s *Server) RegisterAppClientBackend(conn net.Conn, appKey string, appClientId string) {
 	appServer, exist := s.appsServers[appKey]
 	if !exist {
-		return errors.New("NOTFOUND")
+		s.logger.Println("Not found requested app server")
+		return
 	}
 
 	appServer.HandleAppClientBackend(appClientId, conn)
-	return nil
 }

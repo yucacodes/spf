@@ -24,6 +24,5 @@ func Main() {
 		return
 	}
 	client := NewClient(config.ServerHost, config.ServerPort, config.AppKey, config.AppHost, config.AppPort)
-	defer client.Close()
 	client.Connect()
 }
