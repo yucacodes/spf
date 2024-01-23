@@ -40,29 +40,38 @@ func NewClient(
 }
 
 func (c *Client) Connect() {
+	c.logger.Println("Connecting to the server")
 	conn, err := net.Dial("tcp", c.serverHost+":"+strconv.Itoa(c.serverPort))
 	if err != nil {
+		c.logger.Println("Connection error")
+		c.logger.Println(err)
 		return
 	}
-	c.server = socket.NewJsonSocket(conn)
-	defer c.server.Close()
+	defer conn.Close()
 
+	c.server = socket.NewJsonSocket(conn)
+
+	c.logger.Println("Sending Init App request")
 	req := server.AppRequest{
 		AppKey:  c.appKey,
 		InitApp: true,
 	}
 	err = c.server.Send(req)
 	if err != nil {
-		c.logger.Fatalln(err)
+		c.logger.Println("Error sending init app request")
+		c.logger.Println(err)
 		return
 	}
 
+	c.logger.Println("Waiting for connection requests...")
 	for c.server.IsOpen() {
 		req := app.AppClientPairRequestDto{}
-		err := c.server.Receive(req)
+		err := c.server.Receive(&req)
 		if err != nil {
+			c.logger.Println("Error reading connection request")
 			continue
 		}
+		c.logger.Println("Connection request received")
 
 		go c.createBackendConnection(&req)
 	}
@@ -70,8 +79,11 @@ func (c *Client) Connect() {
 
 func (c *Client) createBackendConnection(req *app.AppClientPairRequestDto) {
 
+	c.logger.Println("Connecting to backend...")
 	backConn, err := net.Dial("tcp", c.appHost+":"+strconv.Itoa(c.appPort))
 	if err != nil {
+		c.logger.Println("connection error")
+		c.logger.Println(err)
 		return
 	}
 	defer backConn.Close()

@@ -65,7 +65,6 @@ func (es *ESocket) IsOpen() bool {
 }
 
 func (es *ESocket) Close() {
-	es.conn.Close()
 	es.closed = true
 }
 
