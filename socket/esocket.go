@@ -2,7 +2,6 @@ package socket
 
 import (
 	"errors"
-	"fmt"
 	"net"
 )
 
@@ -36,11 +35,10 @@ func (es *ESocket) SendWithStop(buff []byte, stopByte byte) error {
 }
 
 func (es *ESocket) StreamingTo(target *ESocket) {
-	for es.IsOpen() && target.IsOpen() {
+	for {
 		b, err := es.ReceiveByte()
 		if err != nil {
-			fmt.Println(err)
-			continue
+			break
 		}
 		target.SendByte(b)
 	}

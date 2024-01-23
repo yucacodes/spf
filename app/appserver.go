@@ -8,10 +8,12 @@ import (
 	"strconv"
 
 	"github.com/yucacodes/secure-port-forwarding/socket"
+	"golang.org/x/sync/syncmap"
 )
 
 type AppServer struct {
-	clients map[string]*AppClient
+	// clients map[string]*AppClient
+	clients *syncmap.Map
 	backend *socket.JsonSocket
 	port    int
 	logger  *log.Logger
@@ -19,7 +21,8 @@ type AppServer struct {
 
 func NewAppServer(port int, backend net.Conn) *AppServer {
 	o := AppServer{
-		clients: make(map[string]*AppClient),
+		// clients: make(map[string]*AppClient),
+		clients: &syncmap.Map{},
 		port:    port,
 		backend: socket.NewJsonSocket(backend),
 		logger:  log.New(os.Stdout, "AppServer: ", log.Ldate|log.Ltime),
@@ -49,7 +52,8 @@ func (as *AppServer) Listen() {
 		}
 		as.logger.Println("New connection")
 		client := NewAppClient(conn)
-		as.clients[client.Id()] = client
+		// as.clients[client.Id()] = client
+		as.clients.Store(client.Id(), client)
 		go as.RequestAppClientBackend(client)
 	}
 
@@ -57,7 +61,9 @@ func (as *AppServer) Listen() {
 }
 
 func (as *AppServer) HandleAppClientBackend(clientId string, conn net.Conn) {
-	client, exist := as.clients[clientId]
+	// client, exist := as.clients[clientId]
+	_client, exist := as.clients.Load(clientId)
+	client := _client.(*AppClient)
 	if !exist {
 		as.logger.Println("Not found requested app client")
 		return

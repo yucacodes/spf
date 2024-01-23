@@ -45,12 +45,14 @@ func (ap *AppClient) Streaming() {
 	go func() {
 		defer wg.Done()
 		cSocket.StreamingTo(bSocket)
+		bSocket.Conn().Close()
 	}()
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		bSocket.StreamingTo(cSocket)
+		cSocket.Conn().Close()
 	}()
 
 	wg.Wait()
