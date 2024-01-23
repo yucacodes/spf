@@ -100,10 +100,9 @@ func (s *Server) StartApp(conn net.Conn, appKey string) {
 		return
 	}
 
-	appServer, exist := s.appsServers[appKey]
+	_, exist = s.appsServers[appKey]
 	if exist {
-		s.logger.Println("Requested app was started previously, closing old app...")
-		appServer.Close()
+		s.logger.Println("Requested app was started previously, removing old app...")
 		delete(s.appsServers, appKey)
 	}
 

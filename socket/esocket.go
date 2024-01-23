@@ -64,10 +64,6 @@ func (es *ESocket) IsOpen() bool {
 	return !es.closed
 }
 
-func (es *ESocket) Close() {
-	es.closed = true
-}
-
 func (es *ESocket) Conn() net.Conn {
 	return es.conn
 }

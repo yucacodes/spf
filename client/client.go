@@ -78,7 +78,6 @@ func (c *Client) Connect() {
 }
 
 func (c *Client) createBackendConnection(req *app.AppClientPairRequestDto) {
-
 	c.logger.Println("Connecting to backend...")
 	backConn, err := net.Dial("tcp", c.appHost+":"+strconv.Itoa(c.appPort))
 	if err != nil {
@@ -88,28 +87,32 @@ func (c *Client) createBackendConnection(req *app.AppClientPairRequestDto) {
 	}
 	defer backConn.Close()
 
+	c.logger.Println("Connecting to server...")
 	serverConn, err := net.Dial("tcp", c.serverHost+":"+strconv.Itoa(c.serverPort))
 	if err != nil {
+		c.logger.Println("connection error")
+		c.logger.Println(err)
 		return
 	}
+	defer serverConn.Close()
+
 	sjSocket := socket.NewJsonSocket(serverConn)
-	defer sjSocket.Close()
 
 	serverReq := server.AppRequest{
 		AppKey:             c.appKey,
 		BackendToAppClient: true,
 		AppClientId:        req.ClientId,
 	}
+	c.logger.Println("Sending request to server for set app client backend...")
 	err = sjSocket.Send(serverReq)
 	if err != nil {
+		c.logger.Println("Sending request error")
+		c.logger.Println(err)
 		return
 	}
 
 	appClient := app.NewAppClient(serverConn)
 	appClient.SetBackendConnection(backConn)
+	c.logger.Println("Starting App client streaming")
 	appClient.Streaming()
-}
-
-func (c *Client) Close() {
-	// TODO
 }

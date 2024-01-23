@@ -32,12 +32,3 @@ func (ap *AppClient) Streaming() {
 	// TODO: Implement this
 	panic("Implement this")
 }
-
-func (ap *AppClient) Close() {
-	if ap.backConn != nil {
-		ap.backConn.Close()
-	}
-	if ap.clientConn != nil {
-		ap.clientConn.Close()
-	}
-}

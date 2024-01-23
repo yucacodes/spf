@@ -72,11 +72,3 @@ func (as *AppServer) RequestAppClientBackend(client *AppClient) {
 	}
 	as.logger.Println("Request App client backend success")
 }
-
-func (as *AppServer) Close() {
-	as.logger.Println("Closing...")
-	for clientId, client := range as.clients {
-		client.Close()
-		delete(as.clients, clientId)
-	}
-}
