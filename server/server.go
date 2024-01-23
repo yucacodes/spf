@@ -37,35 +37,44 @@ func NewServer(port int, appsConfigs []*AppConfig) *Server {
 	return &s
 }
 
-func (s *Server) Listen() error {
+func (s *Server) Listen() {
 	server, err := net.Listen("tcp", "0.0.0.0:"+strconv.Itoa(s.port))
 	if err != nil {
-		s.logger.Fatal(err)
-		return err
+		s.logger.Println(err)
+		return
 	}
 	defer server.Close()
+
 	s.logger.Println("Listening on port " + strconv.Itoa(s.port))
 	for {
 		conn, err := server.Accept()
 		if err != nil {
-			s.logger.Fatalln(err)
-			return nil
+			s.logger.Println(err)
+			break
 		}
-		s.logger.Println("New connection")
-		jSocket := socket.NewJsonSocket(conn)
-		req, err := s.GetAppRequest(jSocket)
-		if err != nil {
-			jSocket.Close()
-			continue
-		}
+		go func() {
+			s.HandleConnection(conn)
+			conn.Close()
+		}()
+	}
+}
 
-		if req.InitApp {
-			go s.StartApp(jSocket, req.AppKey)
-		} else if req.BackendToAppClient {
-			s.RegisterAppClientBackend(jSocket, req.AppKey, req.AppClientId)
-		}
+func (s *Server) HandleConnection(conn net.Conn) {
+	s.logger.Println("New connection")
+	jSocket := socket.NewJsonSocket(conn)
+	req, err := s.GetAppRequest(jSocket)
+	if err != nil {
+		s.logger.Println("Error reading App request")
+		return
 	}
 
+	if req.InitApp {
+		s.logger.Println("Received Init App request")
+		s.StartApp(conn, req.AppKey)
+	} else if req.BackendToAppClient {
+		s.logger.Println("Received Backend to App Client request")
+		s.RegisterAppClientBackend(conn, req.AppKey, req.AppClientId)
+	}
 }
 
 type AppRequest struct {
@@ -84,38 +93,33 @@ func (s *Server) GetAppRequest(jSocket *socket.JsonSocket) (*AppRequest, error) 
 	return &req, nil
 }
 
-func (s *Server) StartApp(jSocket *socket.JsonSocket, appKey string) {
-	defer jSocket.Close()
-
+func (s *Server) StartApp(conn net.Conn, appKey string) {
 	appConfig, exist := s.appsConfigs[appKey]
 	if !exist {
+		s.logger.Println("Requested app not registered")
 		return
 	}
 
 	appServer, exist := s.appsServers[appKey]
 	if exist {
+		s.logger.Println("Requested app was started previously, closing old app...")
 		appServer.Close()
 		delete(s.appsServers, appKey)
 	}
 
-	newAppServer := app.NewAppServer(appConfig.Port, jSocket)
+	newAppServer := app.NewAppServer(appConfig.Port, conn)
 	s.appsServers[appKey] = newAppServer
 
-	defer newAppServer.Close()
+	s.logger.Println("Starting app...")
 	newAppServer.Listen()
 }
 
-func (s *Server) RegisterAppClientBackend(jSocket *socket.JsonSocket, appKey string, appClientId string) error {
+func (s *Server) RegisterAppClientBackend(conn net.Conn, appKey string, appClientId string) error {
 	appServer, exist := s.appsServers[appKey]
 	if !exist {
 		return errors.New("NOTFOUND")
 	}
 
-	appServer.HandleAppClientBackend(appClientId, jSocket.Conn())
-
+	appServer.HandleAppClientBackend(appClientId, conn)
 	return nil
-}
-
-func (s *Server) Close() {
-	// TODO
 }

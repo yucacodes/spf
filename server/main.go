@@ -24,6 +24,5 @@ func Main() {
 		return
 	}
 	server := NewServer(config.Port, config.Apps)
-	defer server.Close()
 	server.Listen()
 }
