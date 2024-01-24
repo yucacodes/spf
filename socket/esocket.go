@@ -35,12 +35,21 @@ func (es *ESocket) SendWithStop(buff []byte, stopByte byte) error {
 }
 
 func (es *ESocket) StreamingTo(target *ESocket) {
+	// for {
+	// 	b, err := es.ReceiveByte()
+	// 	if err != nil {
+	// 		break
+	// 	}
+	// 	target.SendByte(b)
+	// }
+	buff := make([]byte, 1000000)
 	for {
-		b, err := es.ReceiveByte()
-		if err != nil {
+		n, err := es.conn.Read(buff)
+		if err != nil || n == 0 {
+			es.closed = true
 			break
 		}
-		target.SendByte(b)
+		target.conn.Write(buff[0:n])
 	}
 }
 
