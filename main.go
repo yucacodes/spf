@@ -22,6 +22,6 @@ func main() {
 	} else if module == "client" {
 		client.Main()
 	} else {
-		logger.Fatalln("unknown command")
+		logger.Println("unknown command")
 	}
 }

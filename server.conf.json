@@ -1,9 +1,0 @@
-{
-  "port": 5000,
-  "apps": [
-    {
-      "port": 4500,
-      "key": "alsdknaslkdnasodnalsdknasdoasdasdasdasdlkamdsasd"
-    }
-  ]
-}
