@@ -76,15 +76,8 @@ func (s *Server) HandleConnection(conn net.Conn) {
 	}
 }
 
-type AppRequest struct {
-	AppKey             string `yaml:"appKey" json:"appKey"`
-	InitApp            bool   `yaml:"initApp" json:"initApp"`
-	BackendToAppClient bool   `yaml:"backendToAppClient" json:"backendToAppClient"`
-	AppClientId        string `yaml:"appClientId" json:"appClientId"`
-}
-
-func (s *Server) GetAppRequest(jSocket *socket.JsonSocket) (*AppRequest, error) {
-	req := AppRequest{}
+func (s *Server) GetNodeRequest(jSocket *socket.JsonSocket) (*NodeRequest, error) {
+	req := NodeRequest{}
 	err := jSocket.Receive(&req)
 	if err != nil {
 		return nil, err

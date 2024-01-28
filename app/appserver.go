@@ -63,7 +63,7 @@ func (as *AppServer) Listen() {
 func (as *AppServer) HandleAppClientBackend(clientId string, conn net.Conn) {
 	// client, exist := as.clients[clientId]
 	_client, exist := as.clients.Load(clientId)
-	client := _client.(*AppClient)
+	client := _client.(*ServiceClient)
 	if !exist {
 		as.logger.Println("Not found requested app client")
 		return
@@ -76,7 +76,7 @@ type AppClientPairRequestDto struct {
 	ClientId string
 }
 
-func (as *AppServer) RequestAppClientBackend(client *AppClient) {
+func (as *AppServer) RequestAppClientBackend(client *ServiceClient) {
 	dto := AppClientPairRequestDto{ClientId: client.Id()}
 	err := as.backend.Send(dto)
 	if err != nil {

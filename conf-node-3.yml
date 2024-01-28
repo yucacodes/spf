@@ -1,0 +1,26 @@
+port: 5050
+id:
+  name: node-3
+  key: node-3-super-key
+nodes:
+  - name: node-2
+    through:
+      node: node-1
+  - name: node-1
+    host: yuca.codes
+    port: 5050
+services:
+  - name: files
+    owner:
+      node: node-2
+  - name: web
+    host: localhost
+    port: 80
+publish:
+  - service: web
+    through:
+      node: node-1
+listen:
+  - port: 6000
+    connect:
+      service: files

@@ -10,15 +10,15 @@ import (
 	"github.com/yucacodes/secure-port-forwarding/socket"
 )
 
-type AppClient struct {
+type ServiceClient struct {
 	id         string
 	clientConn net.Conn
 	backConn   net.Conn
 	logger     *log.Logger
 }
 
-func NewAppClient(clientConn net.Conn) *AppClient {
-	o := AppClient{
+func NewServiceClient(clientConn net.Conn) *ServiceClient {
+	o := ServiceClient{
 		id:         uuid.New().String(),
 		clientConn: clientConn,
 		logger:     log.New(os.Stdout, "AppClient: ", log.Ldate|log.Ltime),
@@ -26,15 +26,15 @@ func NewAppClient(clientConn net.Conn) *AppClient {
 	return &o
 }
 
-func (ap *AppClient) Id() string {
+func (ap *ServiceClient) Id() string {
 	return ap.id
 }
 
-func (ap *AppClient) SetBackendConnection(backConn net.Conn) {
+func (ap *ServiceClient) SetBackendConnection(backConn net.Conn) {
 	ap.backConn = backConn
 }
 
-func (ap *AppClient) Streaming() {
+func (ap *ServiceClient) Streaming() {
 	ap.logger.Println("Starting streaming...")
 	cSocket := socket.NewESocket(ap.clientConn)
 	bSocket := socket.NewESocket(ap.backConn)

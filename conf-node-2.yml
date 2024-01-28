@@ -1,0 +1,24 @@
+port: 5050
+id:
+  name: node-2
+  key: node-2-super-key
+nodes:
+  - name: node-1
+    host: yuca.codes
+    port: 5050
+services:
+  - name: files
+    host: localhost
+    port: 5051
+  - name: mysql
+    owner:
+      node: node-1
+publish:
+  - service: files
+    through: 
+      node: node-1
+listen:
+  - port: 3000
+    connect:
+      service: mysql
+

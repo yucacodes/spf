@@ -3,6 +3,7 @@ package socket
 import (
 	"errors"
 	"net"
+	"sync"
 )
 
 type ESocket struct {
@@ -35,13 +36,6 @@ func (es *ESocket) SendWithStop(buff []byte, stopByte byte) error {
 }
 
 func (es *ESocket) StreamingTo(target *ESocket) {
-	// for {
-	// 	b, err := es.ReceiveByte()
-	// 	if err != nil {
-	// 		break
-	// 	}
-	// 	target.SendByte(b)
-	// }
 	buff := make([]byte, 1000000)
 	for {
 		n, err := es.conn.Read(buff)
@@ -51,6 +45,24 @@ func (es *ESocket) StreamingTo(target *ESocket) {
 		}
 		target.conn.Write(buff[0:n])
 	}
+}
+
+func (es *ESocket) PairStreaming(target *ESocket) {
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		es.StreamingTo(target)
+		target.Conn().Close()
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		target.StreamingTo(es)
+		es.Conn().Close()
+	}()
+	wg.Wait()
 }
 
 func (es *ESocket) SendByte(v byte) error {
