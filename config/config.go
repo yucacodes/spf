@@ -37,13 +37,20 @@ type Listen struct {
 	Connect Connect `yaml:"connect" json:"connect"`
 }
 
+func (l *Listen) ListenConnection() string {
+	host := "0.0.0.0"
+	port := strconv.Itoa(l.Port)
+	return host + ":" + port
+}
+
 type Config struct {
-	Port     *int      `yaml:"port" json:"port"`
-	Id       *NodeId   `yaml:"id" json:"id"`
-	Nodes    []Node    `yaml:"nodes" json:"nodes"`
-	Services []Service `yaml:"services" json:"services"`
-	Publish  []Publish `yaml:"publish" json:"publish"`
-	Listen   []Listen  `yaml:"listen" json:"listen"`
+	Port                  *int      `yaml:"port" json:"port"`
+	Id                    *NodeId   `yaml:"id" json:"id"`
+	Nodes                 []Node    `yaml:"nodes" json:"nodes"`
+	Services              []Service `yaml:"services" json:"services"`
+	Publish               []Publish `yaml:"publish" json:"publish"`
+	Listen                []Listen  `yaml:"listen" json:"listen"`
+	DisableNodeValidation *bool     `yaml:"disableNodeValidation" json:"disableNodeValidation"`
 }
 
 func (c *Config) ListenConnection() string {

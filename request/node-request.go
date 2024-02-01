@@ -3,6 +3,7 @@ package request
 import "github.com/yucacodes/secure-port-forwarding/config"
 
 type NodeRequest struct {
+	Id                       config.NodeId             `yaml:"id" json:"id"`
 	PublishService           *PublishServiceRequest    `yaml:"publishService" json:"publishService"`
 	StreamingToServiceClient *StreamingToServiceClient `yaml:"streamingToServiceClient" json:"streamingToServiceClient"`
 }
@@ -13,6 +14,5 @@ type StreamingToServiceClient struct {
 }
 
 type PublishServiceRequest struct {
-	Id      config.NodeId `yaml:"id" json:"id"`
 	Service string
 }

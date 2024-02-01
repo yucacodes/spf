@@ -4,25 +4,32 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
 
-	"github.com/yucacodes/secure-port-forwarding/config"
 	"github.com/yucacodes/secure-port-forwarding/socket"
 	"golang.org/x/sync/syncmap"
 )
 
 type ForeignService struct {
 	ownerConnection    *socket.JsonSocket
-	config             config.Service
 	clientsConnections *syncmap.Map
 	logger             *log.Logger
+}
+
+func NewForeignService(ownerConnection net.Conn) *ForeignService {
+	return &ForeignService{
+		ownerConnection:    socket.NewJsonSocket(ownerConnection),
+		clientsConnections: &syncmap.Map{},
+		logger:             log.New(os.Stdout, "ForeignService: ", log.Ldate|log.Ltime),
+	}
 }
 
 type ForeignServiceClientConectionPairRequest struct {
 	ClientId string
 }
 
-func (s *ForeignService) HandleIncomingClientConnection(clientId string, conn net.Conn) {
-	clientConn := NewConnectionPair(clientId, conn)
+func (s *ForeignService) HandleIncomingClientConnection(conn net.Conn) {
+	clientConn := NewConnectionPair(conn)
 	s.clientsConnections.Store(clientConn.ClientId(), clientConn)
 
 	req := ForeignServiceClientConectionPairRequest{ClientId: clientConn.ClientId()}
@@ -44,4 +51,9 @@ func (s *ForeignService) HandleBackendServiceConnection(clientId string, conn ne
 
 	clientConn.SetBackend(conn)
 	clientConn.Streaming()
+}
+
+func (s *ForeignService) Stop() {
+	// s.clientsConnections close
+	s.ownerConnection.Conn().Close()
 }

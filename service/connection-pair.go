@@ -3,6 +3,7 @@ package service
 import (
 	"net"
 
+	"github.com/google/uuid"
 	"github.com/yucacodes/secure-port-forwarding/socket"
 )
 
@@ -12,9 +13,9 @@ type ConnectionPair struct {
 	backendConnection  net.Conn
 }
 
-func NewConnectionPair(clientId string, incomingConnection net.Conn) *ConnectionPair {
+func NewConnectionPair(incomingConnection net.Conn) *ConnectionPair {
 	return &ConnectionPair{
-		clientId:           clientId,
+		clientId:           uuid.New().String(),
 		incomingConnection: incomingConnection,
 	}
 }

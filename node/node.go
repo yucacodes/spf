@@ -1,22 +1,40 @@
 package node
 
 import (
+	"errors"
 	"log"
 	"net"
 
 	"github.com/yucacodes/secure-port-forwarding/config"
-	"github.com/yucacodes/secure-port-forwarding/publish"
+	"github.com/yucacodes/secure-port-forwarding/listen"
 	"github.com/yucacodes/secure-port-forwarding/request"
+	"github.com/yucacodes/secure-port-forwarding/service"
 	"github.com/yucacodes/secure-port-forwarding/socket"
+	"golang.org/x/sync/syncmap"
 )
 
 type Node struct {
 	config            *config.Config
+	availableServices *syncmap.Map
 	logger            *log.Logger
-	publishedServices map[string]publish.PublishedService
 }
 
 func (node *Node) Run() {
+	for _, listenConfig := range node.config.Listen {
+		listen := listen.NewListen(&listenConfig, node.availableServices)
+		go listen.Start()
+		defer listen.Stop()
+	}
+
+	// for _, publishConfig := range node.config.Publish {
+	// TODO
+	// 	publish := publish.NewPublishedServiceThroughNode(node.config.Id, )
+	// }
+
+	node.ListenNodeRequests()
+}
+
+func (node *Node) ListenNodeRequests() {
 	server, err := net.Listen("tcp", node.config.ListenConnection())
 	if err != nil {
 		node.logger.Println(err)
@@ -49,7 +67,7 @@ func (node *Node) HandleConnection(conn net.Conn) {
 
 	if req.PublishService != nil {
 		node.logger.Println("Received Publish Service request")
-		node.PublishForeignService(conn, req.PublishService)
+		node.CreateForeignService(conn, req.PublishService)
 	} else if req.StreamingToServiceClient != nil {
 		node.logger.Println("Received Streaming Service Client request")
 		node.StreamToServiceClient(conn, req.StreamingToServiceClient)
@@ -62,20 +80,34 @@ func (node *Node) GetNodeRequest(jSocket *socket.JsonSocket) (*request.NodeReque
 	if err != nil {
 		return nil, err
 	}
-	return &req, nil
+	if node.config.DisableNodeValidation != nil && *node.config.DisableNodeValidation {
+		return &req, nil
+	}
+	for _, nodeConfig := range node.config.Nodes {
+		if req.Id.Name == nodeConfig.Name && nodeConfig.Key != nil && req.Id.Key == *nodeConfig.Key {
+			return &req, nil
+		}
+	}
+	return nil, errors.New("node not found")
 }
 
-func (node *Node) PublishForeignService(conn net.Conn, req *request.PublishServiceRequest) {
-	ps := publish.NewPublishedForeignService()
-	node.publishedServices[req.Service] = ps
-	ps.Start()
+func (node *Node) CreateForeignService(conn net.Conn, req *request.PublishServiceRequest) {
+	_oldService, exist := node.availableServices.Load(req.Service)
+	if exist {
+		oldService := _oldService.(service.Service)
+		oldService.Stop()
+	}
+	newService := service.NewForeignService(conn)
+	node.availableServices.Store(req.Service, newService)
 }
 
 func (node *Node) StreamToServiceClient(conn net.Conn, req *request.StreamingToServiceClient) {
-	publishedService, exist := node.publishedServices[req.Service]
+	_service, exist := node.availableServices.Load(req.Service)
+
 	if !exist {
 		node.logger.Println("Not found requested app server")
 		return
 	}
-	publishedService.HandleServiceClientBackend(req.Client, conn)
+	service := _service.(service.Service)
+	service.HandleBackendServiceConnection(req.Client, conn)
 }

@@ -5,19 +5,19 @@ import (
 	"net"
 	"os"
 
-	"github.com/yucacodes/secure-port-forwarding/app"
 	"github.com/yucacodes/secure-port-forwarding/config"
 	"github.com/yucacodes/secure-port-forwarding/request"
+	"github.com/yucacodes/secure-port-forwarding/service"
 
 	"github.com/yucacodes/secure-port-forwarding/socket"
 )
 
 type PublishedServiceThroughNode struct {
-	id       *config.NodeId
-	service  *config.Service
-	node     *config.Node
-	nodeConn *socket.JsonSocket
-	logger   *log.Logger
+	id         *config.NodeId
+	service    *config.Service
+	nodeConfig *config.Node
+	nodeConn   *socket.JsonSocket
+	logger     *log.Logger
 }
 
 func NewPublishedServiceThroughNode(
@@ -26,25 +26,25 @@ func NewPublishedServiceThroughNode(
 	node *config.Node,
 ) *PublishedServiceThroughNode {
 	ps := PublishedServiceThroughNode{
-		id:      id,
-		service: service,
-		node:    node,
-		logger:  log.New(os.Stdout, "Client: ", log.Ldate|log.Ltime),
+		id:         id,
+		service:    service,
+		nodeConfig: node,
+		logger:     log.New(os.Stdout, "Client: ", log.Ldate|log.Ltime),
 	}
 	return &ps
 }
 
 func (c *PublishedServiceThroughNode) Connect() {
-	if !c.node.IsPublic() {
-		c.logger.Println("Error: Node " + c.node.Name + " is not public")
+	if !c.nodeConfig.IsPublic() {
+		c.logger.Println("Error: Node " + c.nodeConfig.Name + " is not public")
 		return
 	}
 	if !c.service.IsOwn() {
 		c.logger.Println("Error: Service " + c.service.Name + " is not own")
 		return
 	}
-	c.logger.Println("Connecting to the node " + c.node.Name)
-	conn, err := net.Dial("tcp", c.node.Connection())
+	c.logger.Println("Connecting to the node " + c.nodeConfig.Name)
+	conn, err := net.Dial("tcp", c.nodeConfig.Connection())
 	if err != nil {
 		c.logger.Println("Connection error")
 		c.logger.Println(err)
@@ -56,8 +56,8 @@ func (c *PublishedServiceThroughNode) Connect() {
 
 	c.logger.Println("Sending publish service request")
 	req := request.NodeRequest{
+		Id: *c.id,
 		PublishService: &request.PublishServiceRequest{
-			Id:      *c.id,
 			Service: c.service.Name,
 		},
 	}
@@ -70,7 +70,7 @@ func (c *PublishedServiceThroughNode) Connect() {
 
 	c.logger.Println("Waiting for connection requests...")
 	for c.nodeConn.IsOpen() {
-		req := app.AppClientPairRequestDto{}
+		req := service.ForeignServiceClientConectionPairRequest{}
 		err := c.nodeConn.Receive(&req)
 		if err != nil {
 			c.logger.Println("Error reading connection request")
@@ -82,7 +82,7 @@ func (c *PublishedServiceThroughNode) Connect() {
 	}
 }
 
-func (c *PublishedServiceThroughNode) createBackendConnection(req *app.AppClientPairRequestDto) {
+func (c *PublishedServiceThroughNode) createBackendConnection(req *service.ForeignServiceClientConectionPairRequest) {
 	c.logger.Println("Connecting to backend...")
 	serviceConn, err := net.Dial("tcp", c.service.Connection())
 
@@ -94,7 +94,7 @@ func (c *PublishedServiceThroughNode) createBackendConnection(req *app.AppClient
 	defer serviceConn.Close()
 
 	c.logger.Println("Connecting to node...")
-	serverConn, err := net.Dial("tcp", c.node.Connection())
+	serverConn, err := net.Dial("tcp", c.nodeConfig.Connection())
 	if err != nil {
 		c.logger.Println("connection error")
 		c.logger.Println(err)
@@ -119,8 +119,8 @@ func (c *PublishedServiceThroughNode) createBackendConnection(req *app.AppClient
 		return
 	}
 
-	appClient := app.NewAppClient(serverConn)
-	appClient.SetBackendConnection(serviceConn)
+	connectionPair := service.NewConnectionPair(serverConn)
+	connectionPair.SetBackend(serviceConn)
 	c.logger.Println("Starting App client streaming")
-	appClient.Streaming()
+	connectionPair.Streaming()
 }
