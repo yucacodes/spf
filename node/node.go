@@ -4,9 +4,11 @@ import (
 	"errors"
 	"log"
 	"net"
+	"os"
 
 	"github.com/yucacodes/secure-port-forwarding/config"
 	"github.com/yucacodes/secure-port-forwarding/listen"
+	"github.com/yucacodes/secure-port-forwarding/publish"
 	"github.com/yucacodes/secure-port-forwarding/request"
 	"github.com/yucacodes/secure-port-forwarding/service"
 	"github.com/yucacodes/secure-port-forwarding/socket"
@@ -19,19 +21,54 @@ type Node struct {
 	logger            *log.Logger
 }
 
+func NewNode(config *config.Config) *Node {
+	return &Node{
+		config:            config,
+		availableServices: &syncmap.Map{},
+		logger:            log.New(os.Stdout, "Node: ", log.Ldate|log.Ltime),
+	}
+}
+
 func (node *Node) Run() {
+	var err error
 	for _, listenConfig := range node.config.Listen {
-		listen := listen.NewListen(&listenConfig, node.availableServices)
+		listen := listen.NewListen(listenConfig, node.availableServices)
 		go listen.Start()
 		defer listen.Stop()
 	}
 
-	// for _, publishConfig := range node.config.Publish {
-	// TODO
-	// 	publish := publish.NewPublishedServiceThroughNode(node.config.Id, )
-	// }
-
-	node.ListenNodeRequests()
+	for _, publishConfig := range node.config.Publish {
+		var serviceConfig *config.Service
+		for _, _serviceConfig := range node.config.Services {
+			if _serviceConfig.Name == publishConfig.Service {
+				serviceConfig = _serviceConfig
+				break
+			}
+		}
+		if serviceConfig == nil {
+			err = errors.New("not found service " + publishConfig.Service)
+			break
+		}
+		if publishConfig.Through != nil {
+			var nodeConfig *config.Node
+			for _, _nodeConfig := range node.config.Nodes {
+				if _nodeConfig.Name == publishConfig.Through.Node {
+					nodeConfig = _nodeConfig
+					break
+				}
+			}
+			if serviceConfig == nil {
+				err = errors.New("not found node " + publishConfig.Through.Node)
+				break
+			}
+			publish := publish.NewPublishedServiceThroughNode(node.config.Id, serviceConfig, nodeConfig)
+			go publish.Start()
+			defer publish.Stop()
+		}
+	}
+	if err == nil {
+		node.ListenNodeRequests()
+	}
 }
 
 func (node *Node) ListenNodeRequests() {
@@ -51,7 +88,6 @@ func (node *Node) ListenNodeRequests() {
 		}
 		go func() {
 			node.HandleConnection(conn)
-			conn.Close()
 		}()
 	}
 }
@@ -61,7 +97,8 @@ func (node *Node) HandleConnection(conn net.Conn) {
 	jSocket := socket.NewJsonSocket(conn)
 	req, err := node.GetNodeRequest(jSocket)
 	if err != nil {
-		node.logger.Println("Error reading App request")
+		node.logger.Println("Error reading Node request")
+		node.logger.Println(err)
 		return
 	}
 

@@ -29,12 +29,12 @@ func NewPublishedServiceThroughNode(
 		id:         id,
 		service:    service,
 		nodeConfig: node,
-		logger:     log.New(os.Stdout, "Client: ", log.Ldate|log.Ltime),
+		logger:     log.New(os.Stdout, "Publish: ", log.Ldate|log.Ltime),
 	}
 	return &ps
 }
 
-func (c *PublishedServiceThroughNode) Connect() {
+func (c *PublishedServiceThroughNode) Start() {
 	if !c.nodeConfig.IsPublic() {
 		c.logger.Println("Error: Node " + c.nodeConfig.Name + " is not public")
 		return
@@ -43,7 +43,7 @@ func (c *PublishedServiceThroughNode) Connect() {
 		c.logger.Println("Error: Service " + c.service.Name + " is not own")
 		return
 	}
-	c.logger.Println("Connecting to the node " + c.nodeConfig.Name)
+	c.logger.Println("Connecting to the node " + c.nodeConfig.Name + " (" + c.nodeConfig.Connection() + ")")
 	conn, err := net.Dial("tcp", c.nodeConfig.Connection())
 	if err != nil {
 		c.logger.Println("Connection error")
@@ -74,7 +74,8 @@ func (c *PublishedServiceThroughNode) Connect() {
 		err := c.nodeConn.Receive(&req)
 		if err != nil {
 			c.logger.Println("Error reading connection request")
-			continue
+			c.logger.Println(err)
+			break
 		}
 		c.logger.Println("Connection request received")
 
@@ -105,6 +106,7 @@ func (c *PublishedServiceThroughNode) createBackendConnection(req *service.Forei
 	sjSocket := socket.NewJsonSocket(serverConn)
 
 	serverReq := request.NodeRequest{
+		Id: *c.id,
 		StreamingToServiceClient: &request.StreamingToServiceClient{
 			Service: c.service.Name,
 			Client:  req.ClientId,
@@ -123,4 +125,8 @@ func (c *PublishedServiceThroughNode) createBackendConnection(req *service.Forei
 	connectionPair.SetBackend(serviceConn)
 	c.logger.Println("Starting App client streaming")
 	connectionPair.Streaming()
+}
+
+func (c *PublishedServiceThroughNode) Stop() {
+	c.nodeConn.Conn().Close()
 }

@@ -1,0 +1,25 @@
+port: 5051
+id:
+  name: node-1
+  key: node-1-super-key
+nodes:
+  - name: node-2
+    key: node-2-super-key
+  - name: node-3
+    key: node-3-super-key
+services:
+  - name: files
+    owner: 
+      node: node-2
+  - name: web
+    owner: 
+      node: node-3
+  - name: mysql
+    host: localhost 
+    port: 4560
+publish:
+  - service: mysql
+listen:
+  - port: 4500
+    connect:
+      service: files

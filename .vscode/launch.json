@@ -5,20 +5,20 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Server",
+      "name": "Node 1",
       "type": "go",
       "request": "launch",
       "mode": "auto",
       "program": "main.go",
-      "args": ["server", "-c", ".vscode/server.conf.json"]
+      "args": ["-c", ".vscode/conf-1.yml"]
     },
     {
-      "name": "Client",
+      "name": "Node 2",
       "type": "go",
       "request": "launch",
       "mode": "auto",
       "program": "main.go",
-      "args": ["client", "-c", ".vscode/client.conf.json"]
-    }
+      "args": ["-c", ".vscode/conf-2.yml"]
+    },
   ]
 }

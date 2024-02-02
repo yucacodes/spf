@@ -1,27 +1,24 @@
 package main
 
 import (
-	"log"
-	"os"
-
-	"github.com/yucacodes/secure-port-forwarding/client"
-	"github.com/yucacodes/secure-port-forwarding/server"
+	"github.com/jessevdk/go-flags"
+	"github.com/yucacodes/secure-port-forwarding/config"
+	"github.com/yucacodes/secure-port-forwarding/node"
 )
 
+var NodeOptions struct {
+	ConfigFile string `short:"c" long:"config" description:"Server config file" required:"true"`
+}
+
 func main() {
-	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
-	args := os.Args[1:]
-	if len(args) < 1 {
+	_, err := flags.Parse(&NodeOptions)
+	if err != nil {
 		return
 	}
 
-	module := args[0]
-
-	if module == "server" {
-		server.Main()
-	} else if module == "client" {
-		client.Main()
-	} else {
-		logger.Println("unknown command")
+	config, err := config.ConfigFromFile(NodeOptions.ConfigFile)
+	if err != nil {
+		panic("Invalid config")
 	}
+	node.NewNode(config).Run()
 }

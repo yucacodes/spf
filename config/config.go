@@ -44,13 +44,13 @@ func (l *Listen) ListenConnection() string {
 }
 
 type Config struct {
-	Port                  *int      `yaml:"port" json:"port"`
-	Id                    *NodeId   `yaml:"id" json:"id"`
-	Nodes                 []Node    `yaml:"nodes" json:"nodes"`
-	Services              []Service `yaml:"services" json:"services"`
-	Publish               []Publish `yaml:"publish" json:"publish"`
-	Listen                []Listen  `yaml:"listen" json:"listen"`
-	DisableNodeValidation *bool     `yaml:"disableNodeValidation" json:"disableNodeValidation"`
+	Port                  *int       `yaml:"port" json:"port"`
+	Id                    *NodeId    `yaml:"id" json:"id"`
+	Nodes                 []*Node    `yaml:"nodes" json:"nodes"`
+	Services              []*Service `yaml:"services" json:"services"`
+	Publish               []*Publish `yaml:"publish" json:"publish"`
+	Listen                []*Listen  `yaml:"listen" json:"listen"`
+	DisableNodeValidation *bool      `yaml:"disableNodeValidation" json:"disableNodeValidation"`
 }
 
 func (c *Config) ListenConnection() string {
