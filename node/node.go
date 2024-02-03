@@ -37,6 +37,12 @@ func (node *Node) Run() {
 		defer listen.Stop()
 	}
 
+	for _, serviceConfig := range node.config.Services {
+		if !serviceConfig.IsOwn() {
+
+		}
+	}
+
 	for _, publishConfig := range node.config.Publish {
 		var serviceConfig *config.Service
 		for _, _serviceConfig := range node.config.Services {

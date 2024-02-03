@@ -19,10 +19,6 @@ type Through struct {
 	Node string `yaml:"node" json:"node"`
 }
 
-type Owner struct {
-	Node string `yaml:"node" json:"node"`
-}
-
 type Publish struct {
 	Service string   `yaml:"service" json:"service"`
 	Through *Through `yaml:"through" json:"through"`

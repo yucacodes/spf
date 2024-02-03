@@ -3,10 +3,10 @@ package config
 import "strconv"
 
 type Service struct {
-	Name  string  `yaml:"name" json:"name"`
-	Host  *string `yaml:"host" json:"host"`
-	Port  *int    `yaml:"port" json:"port"`
-	Owner *Owner  `yaml:"owner" json:"owner"`
+	Name    string   `yaml:"name" json:"name"`
+	Host    *string  `yaml:"host" json:"host"`
+	Port    *int     `yaml:"port" json:"port"`
+	Through *Through `yaml:"through" json:"through"`
 }
 
 const DefaultServiceHost = "127.0.0.1"
@@ -24,5 +24,5 @@ func (n *Service) Connection() string {
 }
 
 func (n *Service) IsOwn() bool {
-	return n.Owner == nil && n.Port != nil
+	return n.Connection() != ""
 }

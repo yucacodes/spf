@@ -70,20 +70,24 @@ func (c *PublishedServiceThroughNode) Start() {
 
 	c.logger.Println("Waiting for connection requests...")
 	for c.nodeConn.IsOpen() {
-		req := service.ForeignServiceClientConectionPairRequest{}
+		req := request.NodeRequest{}
 		err := c.nodeConn.Receive(&req)
 		if err != nil {
 			c.logger.Println("Error reading connection request")
 			c.logger.Println(err)
 			break
 		}
+		if req.ForeignServiceClientConectionPair == nil {
+			c.logger.Println("Unespected request")
+			break
+		}
 		c.logger.Println("Connection request received")
 
-		go c.createBackendConnection(&req)
+		go c.createBackendConnection(req.ForeignServiceClientConectionPair)
 	}
 }
 
-func (c *PublishedServiceThroughNode) createBackendConnection(req *service.ForeignServiceClientConectionPairRequest) {
+func (c *PublishedServiceThroughNode) createBackendConnection(req *request.ForeignServiceClientConectionPairRequest) {
 	c.logger.Println("Connecting to backend...")
 	serviceConn, err := net.Dial("tcp", c.service.Connection())
 
@@ -109,7 +113,7 @@ func (c *PublishedServiceThroughNode) createBackendConnection(req *service.Forei
 		Id: *c.id,
 		StreamingToServiceClient: &request.StreamingToServiceClient{
 			Service: c.service.Name,
-			Client:  req.ClientId,
+			Client:  req.Client,
 		},
 	}
 
@@ -123,7 +127,7 @@ func (c *PublishedServiceThroughNode) createBackendConnection(req *service.Forei
 
 	connectionPair := service.NewConnectionPair(serverConn)
 	connectionPair.SetBackend(serviceConn)
-	c.logger.Println("Starting App client streaming")
+	c.logger.Println("Starting service client streaming")
 	connectionPair.Streaming()
 }
 

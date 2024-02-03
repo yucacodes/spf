@@ -20,5 +20,13 @@
       "program": "main.go",
       "args": ["-c", ".vscode/conf-2.yml"]
     },
+    {
+      "name": "Node 3",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "main.go",
+      "args": ["-c", ".vscode/conf-3.yml"]
+    },
   ]
 }

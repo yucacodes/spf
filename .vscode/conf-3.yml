@@ -1,0 +1,23 @@
+port: 5053
+id:
+  name: node-3
+  key: node-3-super-key
+nodes:
+  - name: node-1
+    host: localhost
+    port: 5051
+services:
+  - name: files
+    through:
+      node: node-1
+  - name: web
+    host: localhost
+    port: 80
+publish:
+  - service: web
+    through:
+      node: node-1
+listen:
+  - port: 6000
+    connect:
+      service: files

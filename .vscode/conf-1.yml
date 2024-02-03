@@ -8,12 +8,6 @@ nodes:
   - name: node-3
     key: node-3-super-key
 services:
-  - name: files
-    owner: 
-      node: node-2
-  - name: web
-    owner: 
-      node: node-3
   - name: mysql
     host: localhost 
     port: 4560
@@ -23,3 +17,6 @@ listen:
   - port: 4500
     connect:
       service: files
+  - port: 4550
+    connect:
+      service: mysql

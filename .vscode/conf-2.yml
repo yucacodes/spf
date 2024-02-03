@@ -11,7 +11,7 @@ services:
     host: localhost
     port: 8080
   - name: mysql
-    owner:
+    through:
       node: node-1
 publish:
   - service: files

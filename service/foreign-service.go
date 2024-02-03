@@ -6,39 +6,40 @@ import (
 	"net"
 	"os"
 
+	"github.com/yucacodes/secure-port-forwarding/config"
+	"github.com/yucacodes/secure-port-forwarding/request"
 	"github.com/yucacodes/secure-port-forwarding/socket"
 	"golang.org/x/sync/syncmap"
 )
 
 type ForeignService struct {
-	ownerConnection    *socket.JsonSocket
+	id                 *config.NodeId
+	providerConnection *socket.JsonSocket
 	clientsConnections *syncmap.Map
 	logger             *log.Logger
 }
 
 func NewForeignService(ownerConnection net.Conn) *ForeignService {
 	return &ForeignService{
-		ownerConnection:    socket.NewJsonSocket(ownerConnection),
+		providerConnection: socket.NewJsonSocket(ownerConnection),
 		clientsConnections: &syncmap.Map{},
 		logger:             log.New(os.Stdout, "ForeignService: ", log.Ldate|log.Ltime),
 	}
 }
 
-type ForeignServiceClientConectionPairRequest struct {
-	ClientId string
-}
-
 func (s *ForeignService) HandleIncomingClientConnection(conn net.Conn) {
 	clientConn := NewConnectionPair(conn)
 	s.clientsConnections.Store(clientConn.ClientId(), clientConn)
-
-	req := ForeignServiceClientConectionPairRequest{ClientId: clientConn.ClientId()}
-	err := s.ownerConnection.Send(req)
+	req := request.NodeRequest{
+		Id:                                *s.id,
+		ForeignServiceClientConectionPair: &request.ForeignServiceClientConectionPairRequest{Client: clientConn.ClientId()},
+	}
+	err := s.providerConnection.Send(req)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	s.logger.Println("Request App client backend success")
+	s.logger.Println("Request Service connection backend success")
 }
 
 func (s *ForeignService) HandleBackendServiceConnection(clientId string, conn net.Conn) {
@@ -55,5 +56,5 @@ func (s *ForeignService) HandleBackendServiceConnection(clientId string, conn ne
 
 func (s *ForeignService) Stop() {
 	// s.clientsConnections close
-	s.ownerConnection.Conn().Close()
+	s.providerConnection.Conn().Close()
 }
