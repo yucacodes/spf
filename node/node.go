@@ -39,7 +39,19 @@ func (node *Node) Run() {
 
 	for _, serviceConfig := range node.config.Services {
 		if !serviceConfig.IsOwn() {
-
+			var nodeConfig *config.Node
+			for _, _nodeConfig := range node.config.Nodes {
+				if _nodeConfig.Name == serviceConfig.Through.Node {
+					nodeConfig = _nodeConfig
+					break
+				}
+			}
+			if nodeConfig == nil {
+				err = errors.New("not found node " + serviceConfig.Through.Node)
+				break
+			}
+			newService := service.NewForeignService(node.config.Id, serviceConfig.Name, nodeConfig, nil)
+			node.availableServices.Store(serviceConfig.Name, newService)
 		}
 	}
 
@@ -114,6 +126,9 @@ func (node *Node) HandleConnection(conn net.Conn) {
 	} else if req.StreamingToServiceClient != nil {
 		node.logger.Println("Received Streaming Service Client request")
 		node.StreamToServiceClient(conn, req.StreamingToServiceClient)
+	} else if req.ForeignServiceClientConectionPair != nil {
+		node.logger.Println("Received Foreign Service Client Conection Pair request")
+		node.ForeignServiceClientConectionPair(conn, req.ForeignServiceClientConectionPair)
 	}
 }
 
@@ -140,7 +155,7 @@ func (node *Node) CreateForeignService(conn net.Conn, req *request.PublishServic
 		oldService := _oldService.(service.Service)
 		oldService.Stop()
 	}
-	newService := service.NewForeignService(node.config.Id, conn)
+	newService := service.NewForeignService(node.config.Id, req.Service, nil, conn)
 	node.availableServices.Store(req.Service, newService)
 }
 
@@ -153,4 +168,15 @@ func (node *Node) StreamToServiceClient(conn net.Conn, req *request.StreamingToS
 	}
 	service := _service.(service.Service)
 	service.HandleBackendServiceConnection(req.Client, conn)
+}
+
+func (node *Node) ForeignServiceClientConectionPair(conn net.Conn, req *request.ForeignServiceClientConectionPairRequest) {
+	_service, exist := node.availableServices.Load(req.Service)
+
+	if !exist {
+		node.logger.Println("Not found requested app server")
+		return
+	}
+	service := _service.(service.Service)
+	service.HandleIncomingClientConnection(conn, &req.Client)
 }

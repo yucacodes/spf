@@ -31,18 +31,19 @@ func NewPublishedServiceThroughNode(
 		nodeConfig: node,
 		logger:     log.New(os.Stdout, "Publish: ", log.Ldate|log.Ltime),
 	}
+
+	if !ps.nodeConfig.IsPublic() {
+		ps.logger.Println("Error: Node " + ps.nodeConfig.Name + " is not public")
+		return nil
+	}
+	if !ps.service.IsOwn() {
+		ps.logger.Println("Error: Service " + ps.service.Name + " is not own")
+		return nil
+	}
 	return &ps
 }
 
 func (c *PublishedServiceThroughNode) Start() {
-	if !c.nodeConfig.IsPublic() {
-		c.logger.Println("Error: Node " + c.nodeConfig.Name + " is not public")
-		return
-	}
-	if !c.service.IsOwn() {
-		c.logger.Println("Error: Service " + c.service.Name + " is not own")
-		return
-	}
 	c.logger.Println("Connecting to the node " + c.nodeConfig.Name + " (" + c.nodeConfig.Connection() + ")")
 	conn, err := net.Dial("tcp", c.nodeConfig.Connection())
 	if err != nil {
@@ -125,7 +126,7 @@ func (c *PublishedServiceThroughNode) createBackendConnection(req *request.Forei
 		return
 	}
 
-	connectionPair := service.NewConnectionPair(serverConn)
+	connectionPair := service.NewConnectionPair(serverConn, &req.Client)
 	connectionPair.SetBackend(serviceConn)
 	c.logger.Println("Starting service client streaming")
 	connectionPair.Streaming()

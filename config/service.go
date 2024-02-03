@@ -24,5 +24,5 @@ func (n *Service) Connection() string {
 }
 
 func (n *Service) IsOwn() bool {
-	return n.Connection() != ""
+	return n.Connection() != "" && n.Through == nil
 }

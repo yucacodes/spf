@@ -45,7 +45,7 @@ func (l *Listen) Start() {
 			_service, exist := l.availableServices.Load(l.config.Connect.Service)
 			if exist {
 				service := _service.(service.Service)
-				service.HandleIncomingClientConnection(conn)
+				service.HandleIncomingClientConnection(conn, nil)
 			} else {
 				conn.Close()
 			}

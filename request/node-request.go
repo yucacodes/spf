@@ -19,5 +19,6 @@ type PublishServiceRequest struct {
 }
 
 type ForeignServiceClientConectionPairRequest struct {
-	Client string `yaml:"client" json:"client"`
+	Service string `yaml:"service" json:"service"`
+	Client  string `yaml:"client" json:"client"`
 }

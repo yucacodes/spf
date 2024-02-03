@@ -13,9 +13,13 @@ type ConnectionPair struct {
 	backendConnection  net.Conn
 }
 
-func NewConnectionPair(incomingConnection net.Conn) *ConnectionPair {
+func NewConnectionPair(incomingConnection net.Conn, clientId *string) *ConnectionPair {
+	var _clientId = uuid.New().String()
+	if clientId != nil {
+		_clientId = *clientId
+	}
 	return &ConnectionPair{
-		clientId:           uuid.New().String(),
+		clientId:           _clientId,
 		incomingConnection: incomingConnection,
 	}
 }
