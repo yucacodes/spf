@@ -113,7 +113,7 @@ func (s *ForeignService) handleIncomingClientConnectionWithDirectProvider(conn n
 func (s *ForeignService) HandleBackendServiceConnection(clientId string, conn net.Conn) {
 	_clientConn, exist := s.clientsConnections.Load(clientId)
 	if !exist {
-		s.logger.Println("Not found requested app client")
+		s.logger.Println("Not found requested service client")
 		return
 	}
 	clientConn := _clientConn.(*ConnectionPair)
