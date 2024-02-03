@@ -13,29 +13,35 @@ import (
 )
 
 type ForeignService struct {
-	id                 *config.NodeId
-	providerConnection *socket.JsonSocket
-	clientsConnections *syncmap.Map
-	logger             *log.Logger
+	id                        *config.NodeId
+	directProvider            *config.Node
+	reverseProviderConnection *socket.JsonSocket
+	clientsConnections        *syncmap.Map
+	logger                    *log.Logger
 }
 
-func NewForeignService(id *config.NodeId, ownerConnection net.Conn) *ForeignService {
+func NewForeignService(id *config.NodeId, provider *config.Node, reverseProviderConnection net.Conn) *ForeignService {
 	return &ForeignService{
-		id:                 id,
-		providerConnection: socket.NewJsonSocket(ownerConnection),
-		clientsConnections: &syncmap.Map{},
-		logger:             log.New(os.Stdout, "ForeignService: ", log.Ldate|log.Ltime),
+		id:                        id,
+		reverseProviderConnection: socket.NewJsonSocket(reverseProviderConnection),
+		clientsConnections:        &syncmap.Map{},
+		logger:                    log.New(os.Stdout, "ForeignService: ", log.Ldate|log.Ltime),
 	}
 }
 
 func (s *ForeignService) HandleIncomingClientConnection(conn net.Conn) {
+	// ************************************************************************
+	// TODO:
+	// Aqui hay que diferenciar si se necesita esperar una conexion hacia atras o
+	// Si por el contrario se crea una conexion directa hacia un nodo publico
+	// ************************************************************************
 	clientConn := NewConnectionPair(conn)
 	s.clientsConnections.Store(clientConn.ClientId(), clientConn)
 	req := request.NodeRequest{
 		Id:                                *s.id,
 		ForeignServiceClientConectionPair: &request.ForeignServiceClientConectionPairRequest{Client: clientConn.ClientId()},
 	}
-	err := s.providerConnection.Send(req)
+	err := s.reverseProviderConnection.Send(req)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -57,5 +63,5 @@ func (s *ForeignService) HandleBackendServiceConnection(clientId string, conn ne
 
 func (s *ForeignService) Stop() {
 	// s.clientsConnections close
-	s.providerConnection.Conn().Close()
+	s.reverseProviderConnection.Conn().Close()
 }
