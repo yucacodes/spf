@@ -19,8 +19,9 @@ type ForeignService struct {
 	logger             *log.Logger
 }
 
-func NewForeignService(ownerConnection net.Conn) *ForeignService {
+func NewForeignService(id *config.NodeId, ownerConnection net.Conn) *ForeignService {
 	return &ForeignService{
+		id:                 id,
 		providerConnection: socket.NewJsonSocket(ownerConnection),
 		clientsConnections: &syncmap.Map{},
 		logger:             log.New(os.Stdout, "ForeignService: ", log.Ldate|log.Ltime),

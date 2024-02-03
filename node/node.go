@@ -140,7 +140,7 @@ func (node *Node) CreateForeignService(conn net.Conn, req *request.PublishServic
 		oldService := _oldService.(service.Service)
 		oldService.Stop()
 	}
-	newService := service.NewForeignService(conn)
+	newService := service.NewForeignService(node.config.Id, conn)
 	node.availableServices.Store(req.Service, newService)
 }
 
